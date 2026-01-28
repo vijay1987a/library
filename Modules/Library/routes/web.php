@@ -1,0 +1,60 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Modules\Library\App\Http\Controllers\LibraryController;
+use Illuminate\Http\Request;
+use App\Model\Users;
+use App\Http\Controllers\ProfileController;
+
+//library routes
+Route::get('/', function () {
+	return view('library::login');
+});
+
+//login
+Route::get('/library_login', function () {
+	return view('library::login');
+});
+
+Route::post('/library_login',function (Request $request) {
+    //check auth
+	$credentials = $request->only('email', 'password');
+
+    if (Auth::attempt($credentials)) {
+        $request->session()->regenerate();
+
+        $user = Auth::user();
+        session([
+            'user_id' => $user->id,
+            'role' => $user->role,
+            'email' => $user->email,
+        ]);
+		
+        return redirect()->route($user->role.'dashboard');
+    }
+
+    return back()->withErrors(['email' => 'Invalid login credentials']);
+})->name('library_login');
+
+
+// after login
+Route::middleware(['auth', 'verified'])->group(function () {
+	
+	//dashboard
+	Route::get('admindashboard', [LibraryController::class,'admindashboard'])->name('admindashboard');
+	Route::get('userdashboard', [LibraryController::class,'userdashboard'])->name('userdashboard');
+	
+	//book crud
+	Route::get('books', [LibraryController::class,'index']); //list
+	Route::get('books/create', [LibraryController::class,'create']);
+	Route::get('books/{id}/edit', [LibraryController::class,'edit']);
+	Route::get('books/{id}/view', [LibraryController::class,'show']);
+	
+	Route::middleware(['auth', 'check_is_admin'])->group(function () {
+		Route::post('books/store', [LibraryController::class,'store'])->name("library_book_store");
+		Route::post('books/{id}/update', [LibraryController::class,'update'])->name("library_book_update");
+		Route::post('books/{id}/destroy', [LibraryController::class,'destroy'])->name("library_book_destroy");
+	});
+});
+
+

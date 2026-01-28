@@ -1,0 +1,169 @@
+<?php
+namespace Modules\Library\App\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Books;
+use Illuminate\Support\Facades\Validator;
+
+class LibraryController extends Controller
+{
+	
+	public function userdashboard()
+    {
+        return view('library::userdashboard');
+    }
+	
+	public function admindashboard()
+    {
+        return view('library::admindashboard');
+    }
+    /**
+     * Display a listing of the resource.
+     */
+	//list
+    public function index(Request $request)
+    {
+		//if had any filter 
+		if($request->has("status"))
+		{
+			$data = Books::where("status",$status)->orderBy('book_id', 'desc')->paginate();
+		}
+		else
+			$data = Books::orderBy('book_id', 'desc')->paginate();
+		
+		
+        return view('library::books.list',['data'=>$data]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(Request $request)
+    {
+		
+        return view('library::books.create',['pg'=>'Create']);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request) {
+		
+		$inp = [
+			"title"=>"required|string|max:300",
+			"author"=>"required|string|max:300",
+			"isbn"=>"required|max:20|unique:books,isbn",
+			"status"=>"required|integer|in:0,1"
+			
+		];
+		
+		$validator = Validator::make($request->all(), $inp);
+
+		if ($validator->fails()) {
+			return redirect()->back()
+				->withErrors($validator)
+				->withInput()
+				->with('pg', 'Create');
+		}
+		
+		//validation success insert data
+		$inp1 = [
+			"title"=>$request->title,
+			"author"=>$request->author,
+			"isbn"=>$request->isbn,
+			"status"=>$request->status,
+			"created_at"=>Date("Y-m-d H:i:s")
+		];
+		Books::insert($inp1);
+
+		return redirect()->back()->with('success', 'Book Created Successfully');
+	}
+
+    /**
+     * Show the specified resource.
+     */
+    public function show(Request $request,$id)
+    {
+		$data = Books::where("book_id",$id)->first(); //pass the value
+		if(!$data)
+			return redirect()->back()->with('fail', 'No Record Found');
+		
+        return view('library::books.view',['data'=>$data]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Request $request,$id)
+    {
+		
+		$data = Books::where("book_id",$id)->first(); //pass the value
+		if(!$data)
+			return redirect()->back()->with('fail', 'No Record Found');
+		
+        return view('library::books.create',['pg'=>'Edit','data'=>$data]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id) {
+		
+		$data = Books::where("book_id",$id)->first(); //pass the value
+		if(!$data)
+			return redirect()->back()->with('fail', 'No Record Found');
+		
+		$inp = [
+			"title"=>"required|string|max:300",
+			"author"=>"required|string|max:300",
+			"isbn"=>"required|max:20|unique:books,isbn",
+			"status"=>"required|integer|in:0,1",
+		];
+		
+		$validator = Validator::make($request->all(), $inp);
+
+		if ($validator->fails()) {
+			return redirect()->back()
+				->withErrors($validator)
+				->withInput()
+				->with('pg', 'Edit');
+		}
+		
+		//validation success insert data
+		$inp1 = [
+			"title"=>$request->title,
+			"author"=>$request->author,
+			"isbn"=>$request->isbn,
+			"status"=>$request->status,
+			"updated_at"=>Date("Y-m-d H:i:s")
+		];
+		Books::where("book_id",$id)->update($inp1);
+
+		return redirect()->back()->with('success', 'Book Updated Successfully');
+	}
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Request $request,$id) {
+		
+		//soft delete
+		$data = Books::where("book_id",$id)->first(); //pass the value
+		if(!$data)
+			return redirect()->back()->with('fail', 'Data Not Found');
+		
+		$status = $data["is_deleted"];
+		if($status == 1)
+		{
+			Books::where("book_id",$id)->update(["is_deleted"=>0]); //activate
+			return redirect()->back()->with('success', 'Activate Successfully');
+		}
+		else
+		{
+			Books::where("book_id",$id)->update(["is_deleted"=>1,"status"=>1]); //delete and stauts change to unavailable
+			return redirect()->back()->with('success', 'deleted Successfully');
+		}
+		
+	}
+}

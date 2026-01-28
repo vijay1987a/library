@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Books List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="p-4">
+
+<div class="container">
+
+    <h3>Books List</h3>
+
+    <a href="{{ url('books/create') }}" class="btn btn-success mb-3">Add Book</a>
+
+    {{-- Success Message --}}
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+	{{-- Fail Message --}}
+    @if (session('fail'))
+        <div style="color:red" class="alert alert-fail">
+            {{ session('fail') }}
+        </div>
+    @endif
+	
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>ISBN</th>
+            <th>Status</th>
+			<th>Del Status</th>
+			<th width="160">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        @forelse ($data as $key => $book)
+            <tr>
+                <td>{{ $data->firstItem() + $key }}</td>
+                <td>{{ $book->title }}</td>
+                <td>{{ $book->author }}</td>
+                <td>{{ $book->isbn }}</td>
+                <td>
+                    <span class="badge bg-{{ $book->status == 0 ? 'success' : 'danger' }}">
+                        {{ $book->status == 0 ? 'Available' : 'Unavailable' }}
+                    </span>
+                </td>
+				<td>
+                    <span class="badge bg-{{ $book->is_deleted == 0 ? 'success' : 'danger' }}">
+                        {{ $book->is_deleted == 0 ? 'Not Deleted' : 'Deleted' }}
+                    </span>
+                </td>
+				<td class="text-center">
+                    {{-- View --}}
+                    <a href="{{ url('books/'.$book->book_id.'/view') }}" class="btn btn-sm btn-info">
+                        <i class="bi bi-eye"></i>
+                    </a>
+
+					@if(auth()->check() && auth()->user()->role === 'admin')
+                    {{-- Edit --}}
+                    <a href="{{ url('books/'.$book->book_id.'/edit') }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+
+                    {{-- Delete --}}
+                    <form action="{{ route('library_book_destroy',$book->book_id) }}"
+                          method="POST" class="d-inline"
+                          onsubmit="return confirm('Delete this book?')">
+                        @csrf
+                        
+                        <button class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+					@endif
+					
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="5" class="text-center">No records found</td>
+            </tr>
+        @endforelse
+        </tbody>
+    </table>
+
+    {{-- Pagination --}}
+    {{ $data->links() }}
+
+</div>
+
+</body>
+</html>

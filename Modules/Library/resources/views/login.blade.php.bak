@@ -2,7 +2,7 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form method="GET" action="{{ route('library_login') }}">
+    <form method="PUT" action="{{ route('library_login') }}">
         @csrf
 
         <!-- Email Address -->

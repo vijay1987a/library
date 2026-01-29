@@ -5,19 +5,61 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Books;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class LibraryController extends Controller
 {
 	
-	public function userdashboard()
+	public function userdashboard(Request $request)
     {
-        return view('library::userdashboard');
+		if($request->has("status"))
+		{
+			$data = Books::where("status",$status)->orderBy('book_id', 'desc')->paginate();
+		}
+		else
+			$data = Books::orderBy('book_id', 'desc')->paginate();
+		
+		
+        return view('library::books.list',['data'=>$data]);
+        //return view('library::userdashboard');
     }
 	
-	public function admindashboard()
+	public function admindashboard(Request $request)
     {
-        return view('library::admindashboard');
+		//return view('library::admindashboard');
+		if($request->has("status"))
+		{
+			$data = Books::where("status",$status)->orderBy('book_id', 'desc')->paginate();
+		}
+		else
+			$data = Books::orderBy('book_id', 'desc')->paginate();
+		
+		//die("t");
+        return view('library::books.list',['data'=>$data]);
+        //
     }
+	
+	public function login(Request $request)
+	{
+		//check auth
+		$credentials = $request->only('email', 'password');
+
+		if (Auth::attempt($credentials)) {
+			//$request->session()->start();
+			$request->session()->regenerate();
+
+			$user = Auth::user();
+			session([
+				'user_id' => $user->id,
+				'role' => $user->role,
+				'email' => $user->email,
+			]);
+			
+        return redirect()->route($user->role.'dashboard');
+    }
+
+    return back()->withErrors(['email' => 'Invalid login credentials']);
+	}
     /**
      * Display a listing of the resource.
      */

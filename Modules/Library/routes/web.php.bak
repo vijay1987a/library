@@ -42,7 +42,7 @@ Route::post('/library_login',function (Request $request) {
 
 	
 // after login
-Route::middleware(['web','auth', 'verified'])->group(function () {
+//Route::middleware(['auth', 'verified'])->group(function () {
 	
 	//dashboard
 	Route::get('userdashboard', [LibraryController::class,'userdashboard'])->name('userdashboard');
@@ -59,6 +59,6 @@ Route::middleware(['web','auth', 'verified'])->group(function () {
 		Route::post('books/{id}/update', [LibraryController::class,'update'])->name("library_book_update");
 		Route::post('books/{id}/destroy', [LibraryController::class,'destroy'])->name("library_book_destroy");
 	});
-});
+//});
 
 

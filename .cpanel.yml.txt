@@ -1,0 +1,4 @@
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/taskoreocoderz/public_html/library
+    - /bin/cp -R * $DEPLOYPATH
